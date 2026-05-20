@@ -1,0 +1,106 @@
+name: Srini Claude Agent
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  claude-review:
+    name: Claude Agent Review
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # ── Java 17 ─────────────────────────────────────────────────────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ── Node 20 ─────────────────────────────────────────────────────────────
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # ── Backend: compile ────────────────────────────────────────────────────
+      - name: Backend compile
+        id: backend_compile
+        working-directory: backend
+        run: |
+          if mvn clean compile -q 2>&1; then
+            echo "status=✅ PASS" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAIL" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Backend: tests ──────────────────────────────────────────────────────
+      - name: Backend tests
+        id: backend_tests
+        working-directory: backend
+        run: |
+          TEST_OUT=$(mvn test 2>&1 | tail -30)
+          echo "output<<EOF" >> $GITHUB_OUTPUT
+          echo "$TEST_OUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          if echo "$TEST_OUT" | grep -q "BUILD SUCCESS"; then
+            echo "status=✅ PASS" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAIL" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Frontend: typecheck ─────────────────────────────────────────────────
+      - name: Frontend install + typecheck
+        id: frontend
+        working-directory: frontend
+        run: |
+          npm ci --silent
+          if npx tsc --noEmit 2>&1; then
+            echo "status=✅ PASS" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAIL" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      # ── Git diff ────────────────────────────────────────────────────────────
+      - name: Collect git diff
+        id: diff
+        run: |
+          git diff HEAD~1 HEAD --stat > /tmp/diff_stat.txt 2>/dev/null || echo "Initial commit" > /tmp/diff_stat.txt
+          git diff HEAD~1 HEAD -- '*.java' '*.ts' '*.tsx' '*.yml' 2>/dev/null | head -300 > /tmp/diff_code.txt
+
+      # ── Claude API review ───────────────────────────────────────────────────
+      - name: Run Claude Agent
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BACKEND_COMPILE: ${{ steps.backend_compile.outputs.status }}
+          BACKEND_TESTS: ${{ steps.backend_tests.outputs.status }}
+          BACKEND_TEST_OUTPUT: ${{ steps.backend_tests.outputs.output }}
+          FRONTEND_TYPECHECK: ${{ steps.frontend.outputs.status }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          BRANCH: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: node .github/scripts/claude_review.mjs
