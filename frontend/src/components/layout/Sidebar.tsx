@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShoppingCart, DollarSign, Bell, Package, BarChart3, MessageSquare, Camera, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingCart, DollarSign, Bell, Package, BarChart3, MessageSquare, FileText, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const menuItems = [
@@ -10,7 +10,7 @@ const menuItems = [
   { icon: Bell,            label: 'Reminders',   path: '/reminders' },
   { icon: Package,         label: 'Inventory',   path: '/inventory' },
   { icon: MessageSquare,   label: 'WhatsApp',    path: '/whatsapp' },
-  { icon: Camera,          label: 'Photo Stock', path: '/photo-stock' },
+  { icon: FileText,        label: 'File Stock',  path: '/file-stock' },
   { icon: BarChart3,       label: 'Reports',     path: '/reports' },
 ];
 

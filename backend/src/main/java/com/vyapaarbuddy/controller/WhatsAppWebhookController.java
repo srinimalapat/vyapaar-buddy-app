@@ -43,7 +43,7 @@ public class WhatsAppWebhookController {
             JsonNode entries = payload.path("entry");
             for (JsonNode entry : entries) {
                 for (JsonNode change : entry.path("changes")) {
-                    JsonNode value = change.path("value");
+                    JsonNode value    = change.path("value");
                     JsonNode messages = value.path("messages");
                     for (JsonNode msg : messages) {
                         String from    = msg.path("from").asText(null);
@@ -52,36 +52,36 @@ public class WhatsAppWebhookController {
 
                         if (from == null) continue;
 
-                        if ("image".equals(msgType)) {
-                            String mediaId = msg.path("image").path("id").asText(null);
-                            handleIncomingImageMessage(from, mediaId, msg);
-                            continue;
-                        }
-
-                        String text = msg.path("text").path("body").asText(null);
-                        if (text == null) continue;
-
-                        log.info("[WEBHOOK] Inbound text from={} waId={}", from, waId);
-
-                        WhatsAppMessageLog logEntry = WhatsAppMessageLog.builder()
-                                .mobileNumber(from)
-                                .direction(WhatsAppMessageDirection.INBOUND)
-                                .waMessageId(waId)
-                                .messageBody(text)
-                                .messageType("text")
-                                .status("RECEIVED")
-                                .rawPayload(payload.toString())
-                                .build();
-                        messageLogRepository.save(logEntry);
-
-                        if (properties.getWebhook().isAutoExecuteCommands()) {
-                            try {
-                                MockWhatsAppRequest req = new MockWhatsAppRequest();
-                                req.setMessage(text);
-                                parserService.executeMessage(req);
-                                log.info("[WEBHOOK] Auto-executed command for message from={}", from);
-                            } catch (Exception e) {
-                                log.warn("[WEBHOOK] Auto-execute failed for from={}: {}", from, e.getMessage());
+                        switch (msgType) {
+                            case "image"    -> handleIncomingImageMessage(from, msg.path("image").path("id").asText(null), msg);
+                            case "document" -> handleIncomingDocumentMessage(from,
+                                    msg.path("document").path("id").asText(null),
+                                    msg.path("document").path("filename").asText(null),
+                                    msg.path("document").path("mime_type").asText(null),
+                                    msg);
+                            default -> {
+                                String text = msg.path("text").path("body").asText(null);
+                                if (text == null) continue;
+                                log.info("[WEBHOOK] Inbound text from={} waId={}", from, waId);
+                                WhatsAppMessageLog logEntry = WhatsAppMessageLog.builder()
+                                        .mobileNumber(from)
+                                        .direction(WhatsAppMessageDirection.INBOUND)
+                                        .waMessageId(waId)
+                                        .messageBody(text)
+                                        .messageType("text")
+                                        .status("RECEIVED")
+                                        .rawPayload(payload.toString())
+                                        .build();
+                                messageLogRepository.save(logEntry);
+                                if (properties.getWebhook().isAutoExecuteCommands()) {
+                                    try {
+                                        MockWhatsAppRequest req = new MockWhatsAppRequest();
+                                        req.setMessage(text);
+                                        parserService.executeMessage(req);
+                                    } catch (Exception e) {
+                                        log.warn("[WEBHOOK] Auto-execute failed from={}: {}", from, e.getMessage());
+                                    }
+                                }
                             }
                         }
                     }
@@ -94,23 +94,42 @@ public class WhatsAppWebhookController {
     }
 
     /**
-     * Placeholder for incoming WhatsApp image messages.
+     * Placeholder for incoming WhatsApp IMAGE messages.
      *
-     * Future implementation steps:
-     * 1. Map fromMobileNumber to a Business/User record (requires phone-to-business mapping table).
-     * 2. Call Meta media endpoint: GET https://graph.facebook.com/{api-version}/{mediaId}
-     *    with Authorization: Bearer {access-token} to get download URL.
-     * 3. Download the image bytes using the returned URL.
-     * 4. Pass downloaded file to PhotoStockEntryService.uploadAndExtract().
-     * 5. Send a confirmation WhatsApp message back to the shop owner with extracted items.
+     * Future implementation:
+     * 1. Map fromMobileNumber → Business/User record (requires phone-to-business mapping).
+     * 2. GET https://graph.facebook.com/{api-version}/{mediaId}
+     *    with Authorization: Bearer {access-token} → get download URL.
+     * 3. Download image bytes from URL.
+     * 4. Pass to FileStockEntryService.uploadAndExtract().
+     * 5. Send extracted items back to shop owner via WhatsApp.
      *
-     * Important: Do NOT update inventory automatically from WhatsApp image until
-     * business mapping is implemented and owner confirmation is received.
+     * Do NOT auto-confirm inventory from WhatsApp until business mapping is in place.
      */
-    private void handleIncomingImageMessage(String fromMobileNumber, String mediaId, JsonNode messageNode) {
-        // Safe metadata only — never log media content or access tokens
-        log.info("[WEBHOOK] Inbound image from={} mediaId={} (processing not yet implemented)",
+    private void handleIncomingImageMessage(String fromMobileNumber, String mediaId, JsonNode msgNode) {
+        log.info("[WEBHOOK] Inbound IMAGE from={} mediaId={} — file-stock processing not yet implemented",
                 fromMobileNumber, mediaId);
-        // TODO: Implement when business-to-phone mapping is in place
+        // TODO: implement once phone-to-business mapping is available
+    }
+
+    /**
+     * Placeholder for incoming WhatsApp DOCUMENT messages (PDF, Excel, CSV, Word, TXT).
+     *
+     * Future implementation:
+     * 1. Map fromMobileNumber → Business/User record.
+     * 2. GET https://graph.facebook.com/{api-version}/{mediaId}
+     *    with Authorization: Bearer {access-token} → get download URL.
+     * 3. Download document bytes from URL.
+     * 4. Reconstruct as MultipartFile with correct filename and mimeType.
+     * 5. Pass to FileStockEntryService.uploadAndExtract() — extractor chosen by content type.
+     * 6. Send extracted items table back to shop owner for confirmation.
+     *
+     * Do NOT auto-confirm inventory from WhatsApp until business mapping is in place.
+     */
+    private void handleIncomingDocumentMessage(String fromMobileNumber, String mediaId,
+                                                String filename, String mimeType, JsonNode msgNode) {
+        log.info("[WEBHOOK] Inbound DOCUMENT from={} mediaId={} filename={} mimeType={} — file-stock processing not yet implemented",
+                fromMobileNumber, mediaId, filename, mimeType);
+        // TODO: implement once phone-to-business mapping is available
     }
 }

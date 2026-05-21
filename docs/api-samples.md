@@ -979,3 +979,121 @@ Content-Type: application/json
 | Name + qty + pcs | `Tea powder 12 pcs 90` |
 | Price with ₹ symbol | `Dal 20kg ₹120` |
 | Packets unit | `Milk 10 packets 30` |
+
+---
+
+## File Stock Entry (Phase 10 Update)
+
+> Supports image upload, PDF, Excel, CSV, Word, and TXT files.
+> Text/CSV/Excel/PDF/Word are extracted automatically (no paid APIs).
+> Image OCR requires mockText for local MVP.
+> Inventory is **only updated after owner confirmation**.
+
+### Upload image (mockText required for local MVP)
+
+```http
+POST /api/v1/file-stock/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file     = bill-photo.jpg
+mockText = Rice 25kg 60
+           Sugar 10kg 45
+           Oil 5L 140
+```
+
+### Upload TXT / CSV (extracted automatically)
+
+```
+file = stock-list.txt
+```
+
+TXT content:
+```
+Rice 25kg 60
+Sugar 10 kg 45
+Oil 5L 140
+```
+
+CSV content (also auto-extracted):
+```
+Rice,25,kg,60
+Sugar,10,kg,45
+Oil,5,l,140
+```
+
+### Upload Excel (.xlsx — extracted via Apache POI)
+
+```
+file = stock-sheet.xlsx
+```
+
+First sheet rows are converted to `Name Qty Unit Price` lines automatically.
+
+### Upload PDF (digital text PDFs extracted via PDFBox)
+
+```
+file = supplier-bill.pdf
+```
+
+For scanned PDFs (no text layer), provide mockText or integrate Tesseract OCR.
+
+### Upload Word document (.docx — extracted via Apache POI)
+
+```
+file = item-list.docx
+```
+
+### Supported line formats for parsing
+
+| Format | Example |
+|--------|---------|
+| Name qty unit price | `Rice 25kg 60` |
+| Name qty unit (space) price | `Sugar 10 kg 45` |
+| Name qty unit ₹price | `Dal 20kg ₹120` |
+| CSV columns | `Rice,25,kg,60` |
+| Pipe-delimited | `Rice \| 25 \| kg \| 60` |
+| No unit (fallback) | `Rice 25 60` |
+| Packets unit | `Milk 10 packets 30` |
+
+### Get entry
+
+```http
+GET /api/v1/file-stock/{id}
+Authorization: Bearer <token>
+```
+
+### List entries
+
+```http
+GET /api/v1/file-stock
+GET /api/v1/file-stock?status=PENDING_REVIEW
+Authorization: Bearer <token>
+```
+
+### Confirm — update inventory
+
+```http
+POST /api/v1/file-stock/{id}/confirm
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "updateExistingItems": true,
+  "items": [
+    { "itemName": "Rice",  "quantity": 25, "unit": "kg", "unitPrice": 60, "category": "Grocery" },
+    { "itemName": "Sugar", "quantity": 10, "unit": "kg", "unitPrice": 45, "category": "Grocery" }
+  ]
+}
+```
+
+Omit `items` to use extracted items as-is.
+
+### Cancel entry
+
+```http
+POST /api/v1/file-stock/{id}/cancel
+Authorization: Bearer <token>
+
+{ "reason": "Wrong file uploaded" }
+```

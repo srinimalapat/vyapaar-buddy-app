@@ -48,6 +48,22 @@ app:
     provider: ${OCR_PROVIDER:MOCK}
     upload-dir: ${OCR_UPLOAD_DIR:uploads/photo-stock}
 
+  file-stock:
+    upload-dir: ${FILE_STOCK_UPLOAD_DIR:uploads/file-stock}
+    max-file-size-mb: ${FILE_STOCK_MAX_SIZE_MB:10}
+    allowed-content-types:
+      - image/jpeg
+      - image/jpg
+      - image/png
+      - image/webp
+      - application/pdf
+      - text/plain
+      - text/csv
+      - application/vnd.ms-excel
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
   whatsapp:
     mode: ${WHATSAPP_MODE:MANUAL}
     cloud-api:
