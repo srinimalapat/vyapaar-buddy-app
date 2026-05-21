@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * TODO: Implement real HTTP call to https://graph.facebook.com/v18.0/{phone-number-id}/messages
  */
 @Slf4j
-@Component
+// Superseded by CloudWhatsAppMessageSender — kept for reference only
 public class FutureCloudWhatsAppMessageSender implements WhatsAppMessageSender {
 
     @Override

@@ -50,8 +50,8 @@ class CreditServiceTest {
         customer = Customer.builder()
                 .id(10L).name("Ramesh").status(CustomerStatus.ACTIVE)
                 .creditBalance(new BigDecimal("1000.00")).business(business).build();
-        when(currentUserService.getCurrentBusiness()).thenReturn(business);
-        when(customerRepository.findByBusinessIdAndId(1L, 10L)).thenReturn(Optional.of(customer));
+        lenient().when(currentUserService.getCurrentBusiness()).thenReturn(business);
+        lenient().when(customerRepository.findByBusinessIdAndId(1L, 10L)).thenReturn(Optional.of(customer));
     }
 
     private CreditTransactionRequest buildRequest(CreditTransactionType type,
@@ -116,6 +116,7 @@ class CreditServiceTest {
 
     @Test
     void getPendingCreditCustomers_returnsActiveCustomersWithBalance() {
+        when(currentUserService.getCurrentBusinessId()).thenReturn(1L);
         when(customerRepository.findByBusinessIdAndStatusAndCreditBalanceGreaterThan(
                 1L, CustomerStatus.ACTIVE, BigDecimal.ZERO))
                 .thenReturn(List.of(customer));
@@ -130,6 +131,7 @@ class CreditServiceTest {
 
     @Test
     void getTotalOutstanding_returnsAggregates() {
+        when(currentUserService.getCurrentBusinessId()).thenReturn(1L);
         when(customerRepository.sumOutstandingCreditByBusinessId(1L))
                 .thenReturn(new BigDecimal("5000.00"));
         when(customerRepository.countCustomersWithOutstandingCredit(1L)).thenReturn(3L);

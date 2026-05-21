@@ -47,7 +47,7 @@ class ReportServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(currentUserService.getCurrentBusinessId()).thenReturn(1L);
+        lenient().when(currentUserService.getCurrentBusinessId()).thenReturn(1L);
     }
 
     @Test

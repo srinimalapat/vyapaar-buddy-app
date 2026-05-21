@@ -3,6 +3,7 @@ package com.vyapaarbuddy.controller;
 import com.vyapaarbuddy.dto.request.ReminderRequest;
 import com.vyapaarbuddy.dto.response.ApiResponse;
 import com.vyapaarbuddy.dto.response.ReminderResponse;
+import com.vyapaarbuddy.dto.response.ReminderSendResponse;
 import com.vyapaarbuddy.service.ReminderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -65,5 +66,11 @@ public class ReminderController {
     @Operation(summary = "Cancel a pending reminder")
     public ResponseEntity<ApiResponse<ReminderResponse>> cancelReminder(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok("Reminder cancelled", reminderService.cancelReminder(id)));
+    }
+
+    @PostMapping("/{id}/send-whatsapp")
+    @Operation(summary = "Send reminder via WhatsApp (MANUAL copy or Cloud API depending on config)")
+    public ResponseEntity<ApiResponse<ReminderSendResponse>> sendWhatsApp(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("WhatsApp reminder dispatched", reminderService.sendWhatsAppReminder(id)));
     }
 }

@@ -42,3 +42,17 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+app:
+  whatsapp:
+    mode: ${WHATSAPP_MODE:MANUAL}
+    cloud-api:
+      enabled: ${WHATSAPP_CLOUD_API_ENABLED:false}
+      base-url: https://graph.facebook.com
+      api-version: v19.0
+      phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+      access-token: ${WHATSAPP_ACCESS_TOKEN:}
+      webhook-verify-token: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:changeme}
+      business-account-id: ${WHATSAPP_BUSINESS_ACCOUNT_ID:}
+    webhook:
+      auto-execute-commands: ${WHATSAPP_AUTO_EXECUTE:false}

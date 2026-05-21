@@ -2,6 +2,8 @@ package com.vyapaarbuddy.service.impl;
 
 import com.vyapaarbuddy.dto.request.ReminderRequest;
 import com.vyapaarbuddy.dto.response.ReminderResponse;
+import com.vyapaarbuddy.dto.response.ReminderSendResponse;
+import com.vyapaarbuddy.dto.response.WhatsAppSendResponse;
 import com.vyapaarbuddy.entity.Business;
 import com.vyapaarbuddy.entity.Customer;
 import com.vyapaarbuddy.entity.Reminder;
@@ -15,7 +17,7 @@ import com.vyapaarbuddy.repository.CustomerRepository;
 import com.vyapaarbuddy.repository.ReminderRepository;
 import com.vyapaarbuddy.security.CurrentUserService;
 import com.vyapaarbuddy.service.ReminderService;
-import com.vyapaarbuddy.whatsapps.ManualWhatsAppMessageSender;
+import com.vyapaarbuddy.service.WhatsAppSenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +33,7 @@ public class ReminderServiceImpl implements ReminderService {
     private final ReminderRepository reminderRepository;
     private final CustomerRepository customerRepository;
     private final ReminderMapper reminderMapper;
-    private final ManualWhatsAppMessageSender whatsAppMessageSender;
+    private final WhatsAppSenderService whatsAppSenderService;
     private final CurrentUserService currentUserService;
 
     @Override
@@ -70,8 +72,8 @@ public class ReminderServiceImpl implements ReminderService {
 
         Reminder saved = reminderRepository.save(reminder);
 
-        if (whatsAppMessageSender.supportsChannel(channel) && customer.getPhone() != null) {
-            whatsAppMessageSender.sendMessage(customer.getPhone(), message);
+        if (channel == ReminderChannel.WHATSAPP_MANUAL && customer.getPhone() != null) {
+            whatsAppSenderService.sendReminderMessage(customer.getPhone(), message);
             saved.setStatus(ReminderStatus.SENT);
             saved = reminderRepository.save(saved);
         }
@@ -152,6 +154,30 @@ public class ReminderServiceImpl implements ReminderService {
         return debtors.stream()
                 .map(customer -> generateReminder(customer.getId(), null))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public ReminderSendResponse sendWhatsAppReminder(Long id) {
+        Long businessId = currentUserService.getCurrentBusinessId();
+        Reminder reminder = reminderRepository.findByBusinessIdAndId(businessId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder not found with id: " + id));
+        if (ReminderStatus.CANCELLED.equals(reminder.getStatus())) {
+            throw new BadRequestException("Cannot send a cancelled reminder");
+        }
+        String phone = reminder.getCustomer().getPhone();
+        if (phone == null || phone.isBlank()) {
+            throw new BadRequestException("Customer has no phone number on record");
+        }
+        WhatsAppSendResponse waResponse = whatsAppSenderService.sendReminderMessage(phone, reminder.getMessage());
+        if (waResponse.isSuccess()) {
+            reminder.setStatus(ReminderStatus.SENT);
+            reminderRepository.save(reminder);
+        }
+        return ReminderSendResponse.builder()
+                .reminder(reminderMapper.toResponse(reminder))
+                .whatsapp(waResponse)
+                .build();
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
