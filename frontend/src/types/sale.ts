@@ -1,44 +1,36 @@
 export interface SaleItemRequest {
-  inventoryItemId: number;
+  itemName: string;
   quantity: number;
   unitPrice: number;
-  discountAmount?: number;
-  description?: string;
 }
 
 export interface SaleRequest {
-  customerId: number;
-  saleDate: string;
-  type?: string;
-  items: SaleItemRequest[];
+  saleType: string;
+  customerId?: number;
   totalAmount: number;
-  discountAmount?: number;
-  taxAmount?: number;
-  paidAmount?: number;
+  paidAmount: number;
+  saleDate?: string;
   notes?: string;
+  items: SaleItemRequest[];
 }
 
 export interface SaleItemResponse {
   id: number;
-  inventoryItemId: number;
+  itemName: string;
   quantity: number;
   unitPrice: number;
-  discountAmount?: number;
   totalPrice: number;
-  description?: string;
-  createdAt: string;
 }
 
 export interface SaleResponse {
   id: number;
-  customerId: number;
-  businessId: number;
-  saleDate: string;
-  type?: string;
+  customerId?: number;
+  customerName?: string;
+  saleType: string;
   totalAmount: number;
-  discountAmount?: number;
-  taxAmount?: number;
-  paidAmount?: number;
+  paidAmount: number;
+  balanceAmount: number;
+  saleDate: string;
   notes?: string;
   items: SaleItemResponse[];
   createdAt: string;

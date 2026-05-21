@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -21,6 +22,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       await register(name, email, password, phone || undefined);
+      toast.success('Account created! Let\'s set up your business.');
       navigate('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Registration failed. Please try again.');

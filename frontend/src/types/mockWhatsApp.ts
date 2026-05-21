@@ -1,14 +1,19 @@
 export interface MockWhatsAppRequest {
   message: string;
-  senderPhone?: string;
-  customerId?: number;
 }
 
 export interface MockCommandResponse {
   commandType: string;
-  originalMessage: string;
-  isValid: boolean;
-  errorMessage?: string;
-  parsedData: Record<string, any>;
-  suggestedResponse: string;
+  customerName?: string;
+  itemName?: string;
+  quantity?: number;
+  amount?: number;
+  paymentType?: string;
+  rawMessage: string;
+  confidenceScore: number;
+  validationErrors: string[];
+  executable: boolean;
+  executed: boolean;
+  executionMessage?: string;
+  executionData?: any;
 }

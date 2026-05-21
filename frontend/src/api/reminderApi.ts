@@ -1,36 +1,37 @@
 import axiosClient from './axiosClient';
 import { ReminderRequest, ReminderResponse } from '../types/reminder';
+import { ApiResponse } from '../types/common';
 
 export const reminderApi = {
-  getAll: async (page = 0, size = 10): Promise<ReminderResponse[]> => {
-    // TODO: Implement get all reminders API call
-    const response = await axiosClient.get<ReminderResponse[]>('/reminders', {
-      params: { page, size },
+  getAll: async (customerId?: number, status?: string): Promise<ReminderResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<ReminderResponse[]>>('/v1/reminders', {
+      params: { customerId, status },
     });
-    return response.data;
+    return response.data.data;
   },
 
   getById: async (id: number): Promise<ReminderResponse> => {
-    // TODO: Implement get reminder by ID API call
-    const response = await axiosClient.get<ReminderResponse>(`/reminders/${id}`);
-    return response.data;
+    const response = await axiosClient.get<ApiResponse<ReminderResponse>>(`/v1/reminders/${id}`);
+    return response.data.data;
   },
 
-  create: async (data: ReminderRequest): Promise<ReminderResponse> => {
-    // TODO: Implement create reminder API call
-    const response = await axiosClient.post<ReminderResponse>('/reminders', data);
-    return response.data;
+  generateForCustomer: async (customerId: number, data?: ReminderRequest): Promise<ReminderResponse> => {
+    const response = await axiosClient.post<ApiResponse<ReminderResponse>>(`/v1/reminders/customer/${customerId}`, data || {});
+    return response.data.data;
   },
 
-  update: async (id: number, data: ReminderRequest): Promise<ReminderResponse> => {
-    // TODO: Implement update reminder API call
-    const response = await axiosClient.put<ReminderResponse>(`/reminders/${id}`, data);
-    return response.data;
+  bulkGenerate: async (): Promise<ReminderResponse[]> => {
+    const response = await axiosClient.post<ApiResponse<ReminderResponse[]>>('/v1/reminders/bulk');
+    return response.data.data;
   },
 
-  send: async (id: number): Promise<ReminderResponse> => {
-    // TODO: Implement send reminder API call
-    const response = await axiosClient.post<ReminderResponse>(`/reminders/${id}/send`);
-    return response.data;
+  markSent: async (id: number): Promise<ReminderResponse> => {
+    const response = await axiosClient.patch<ApiResponse<ReminderResponse>>(`/v1/reminders/${id}/sent`);
+    return response.data.data;
+  },
+
+  cancel: async (id: number): Promise<ReminderResponse> => {
+    const response = await axiosClient.patch<ApiResponse<ReminderResponse>>(`/v1/reminders/${id}/cancel`);
+    return response.data.data;
   },
 };

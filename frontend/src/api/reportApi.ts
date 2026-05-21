@@ -1,26 +1,29 @@
 import axiosClient from './axiosClient';
 import { ReportResponse } from '../types/report';
+import { ApiResponse } from '../types/common';
 
 export const reportApi = {
-  getSalesReport: async (startDate: string, endDate: string): Promise<ReportResponse> => {
-    // TODO: Implement get sales report API call
-    const response = await axiosClient.get<ReportResponse>('/reports/sales', {
-      params: { startDate, endDate },
+  getDailySales: async (date?: string): Promise<ReportResponse> => {
+    const response = await axiosClient.get<ApiResponse<ReportResponse>>('/v1/reports/daily-sales', {
+      params: date ? { date } : undefined,
     });
-    return response.data;
+    return response.data.data;
   },
 
-  getCreditReport: async (startDate: string, endDate: string): Promise<ReportResponse> => {
-    // TODO: Implement get credit report API call
-    const response = await axiosClient.get<ReportResponse>('/reports/credit', {
-      params: { startDate, endDate },
+  getMonthlySales: async (year: number, month: number): Promise<ReportResponse> => {
+    const response = await axiosClient.get<ApiResponse<ReportResponse>>('/v1/reports/monthly-sales', {
+      params: { year, month },
     });
-    return response.data;
+    return response.data.data;
   },
 
-  getInventoryReport: async (): Promise<ReportResponse> => {
-    // TODO: Implement get inventory report API call
-    const response = await axiosClient.get<ReportResponse>('/reports/inventory');
-    return response.data;
+  getCustomerCredit: async (): Promise<ReportResponse> => {
+    const response = await axiosClient.get<ApiResponse<ReportResponse>>('/v1/reports/customer-credit');
+    return response.data.data;
+  },
+
+  getInventoryLowStock: async (): Promise<ReportResponse> => {
+    const response = await axiosClient.get<ApiResponse<ReportResponse>>('/v1/reports/inventory-low-stock');
+    return response.data.data;
   },
 };

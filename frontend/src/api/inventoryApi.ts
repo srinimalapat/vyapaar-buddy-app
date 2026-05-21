@@ -1,41 +1,41 @@
 import axiosClient from './axiosClient';
-import { InventoryItemRequest, InventoryItemResponse } from '../types/inventory';
+import { InventoryItemRequest, InventoryItemResponse, StockUpdateRequest } from '../types/inventory';
+import { ApiResponse } from '../types/common';
 
 export const inventoryApi = {
-  getAll: async (page = 0, size = 10): Promise<InventoryItemResponse[]> => {
-    // TODO: Implement get all inventory items API call
-    const response = await axiosClient.get<InventoryItemResponse[]>('/inventory', {
-      params: { page, size },
+  getAll: async (search?: string, status?: string): Promise<InventoryItemResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<InventoryItemResponse[]>>('/v1/inventory', {
+      params: { search, status },
     });
-    return response.data;
+    return response.data.data;
   },
 
   getLowStock: async (): Promise<InventoryItemResponse[]> => {
-    // TODO: Implement get low stock items API call
-    const response = await axiosClient.get<InventoryItemResponse[]>('/inventory/low-stock');
-    return response.data;
+    const response = await axiosClient.get<ApiResponse<InventoryItemResponse[]>>('/v1/inventory/low-stock');
+    return response.data.data;
   },
 
   getById: async (id: number): Promise<InventoryItemResponse> => {
-    // TODO: Implement get inventory item by ID API call
-    const response = await axiosClient.get<InventoryItemResponse>(`/inventory/${id}`);
-    return response.data;
+    const response = await axiosClient.get<ApiResponse<InventoryItemResponse>>(`/v1/inventory/${id}`);
+    return response.data.data;
   },
 
   create: async (data: InventoryItemRequest): Promise<InventoryItemResponse> => {
-    // TODO: Implement create inventory item API call
-    const response = await axiosClient.post<InventoryItemResponse>('/inventory', data);
-    return response.data;
+    const response = await axiosClient.post<ApiResponse<InventoryItemResponse>>('/v1/inventory', data);
+    return response.data.data;
   },
 
   update: async (id: number, data: InventoryItemRequest): Promise<InventoryItemResponse> => {
-    // TODO: Implement update inventory item API call
-    const response = await axiosClient.put<InventoryItemResponse>(`/inventory/${id}`, data);
-    return response.data;
+    const response = await axiosClient.put<ApiResponse<InventoryItemResponse>>(`/v1/inventory/${id}`, data);
+    return response.data.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    // TODO: Implement delete inventory item API call
-    await axiosClient.delete(`/inventory/${id}`);
+  updateStock: async (id: number, data: StockUpdateRequest): Promise<InventoryItemResponse> => {
+    const response = await axiosClient.patch<ApiResponse<InventoryItemResponse>>(`/v1/inventory/${id}/stock`, data);
+    return response.data.data;
+  },
+
+  deactivate: async (id: number): Promise<void> => {
+    await axiosClient.delete(`/v1/inventory/${id}`);
   },
 };

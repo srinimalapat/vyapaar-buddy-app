@@ -1,29 +1,19 @@
 export interface ReminderRequest {
-  customerId: number;
-  creditTransactionId: number;
-  amount: number;
-  dueDate?: string;
-  scheduledDate?: string;
-  channel?: string;
-  status?: string;
+  amountDue?: number;
+  reminderDate?: string;
   message?: string;
-  notes?: string;
+  channel?: string;
 }
 
 export interface ReminderResponse {
   id: number;
-  customerId: number;
-  creditTransactionId: number;
-  businessId: number;
-  amount: number;
-  dueDate?: string;
-  scheduledDate?: string;
-  sentDate?: string;
-  channel?: string;
-  status: string;
+  customerId?: number;
+  customerName?: string;
+  customerMobileNumber?: string;
+  amountDue?: number;
+  reminderDate?: string;
   message?: string;
-  notes?: string;
-  retryCount: number;
+  status: string;
+  channel?: string;
   createdAt: string;
-  updatedAt: string;
 }

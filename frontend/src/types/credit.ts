@@ -1,25 +1,19 @@
 export interface CreditTransactionRequest {
   customerId: number;
-  type: string;
+  transactionType: string;
   amount: number;
-  transactionDate: string;
-  dueDate?: string;
+  transactionDate?: string;
   description?: string;
-  notes?: string;
+  allowOverPayment?: boolean;
 }
 
 export interface CreditTransactionResponse {
   id: number;
   customerId: number;
-  businessId: number;
-  type: string;
+  customerName?: string;
+  transactionType: string;
   amount: number;
-  transactionDate: string;
-  dueDate?: string;
   description?: string;
-  notes?: string;
-  isSettled: boolean;
-  settledDate?: string;
+  transactionDate: string;
   createdAt: string;
-  updatedAt: string;
 }

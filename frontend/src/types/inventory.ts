@@ -1,32 +1,25 @@
 export interface InventoryItemRequest {
-  name: string;
-  sku?: string;
-  description?: string;
+  itemName: string;
   category?: string;
-  unitPrice: number;
-  quantity: number;
+  quantityAvailable: number;
   lowStockThreshold: number;
-  unit?: string;
+  unitPrice: number;
   status?: string;
-  supplier?: string;
-  costPrice?: number;
 }
 
 export interface InventoryItemResponse {
   id: number;
-  businessId: number;
-  name: string;
-  sku?: string;
-  description?: string;
+  itemName: string;
   category?: string;
-  unitPrice: number;
-  quantity: number;
+  quantityAvailable: number;
   lowStockThreshold: number;
-  unit?: string;
+  unitPrice: number;
   status: string;
-  supplier?: string;
-  costPrice?: number;
-  isLowStock: boolean;
+  lowStock: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StockUpdateRequest {
+  quantityAvailable: number;
 }

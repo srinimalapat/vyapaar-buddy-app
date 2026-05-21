@@ -1,29 +1,31 @@
 import axiosClient from './axiosClient';
 import { CreditTransactionRequest, CreditTransactionResponse } from '../types/credit';
+import { ApiResponse } from '../types/common';
+import { CustomerResponse } from '../types/customer';
 
 export const creditApi = {
-  getAll: async (customerId?: number): Promise<CreditTransactionResponse[]> => {
-    // TODO: Implement get all credit transactions API call
-    const url = customerId ? `/credits/customer/${customerId}` : '/credits';
-    const response = await axiosClient.get<CreditTransactionResponse[]>(url);
-    return response.data;
+  addCredit: async (data: CreditTransactionRequest): Promise<CreditTransactionResponse> => {
+    const response = await axiosClient.post<ApiResponse<CreditTransactionResponse>>('/v1/credits', data);
+    return response.data.data;
   },
 
-  getById: async (id: number): Promise<CreditTransactionResponse> => {
-    // TODO: Implement get credit transaction by ID API call
-    const response = await axiosClient.get<CreditTransactionResponse>(`/credits/${id}`);
-    return response.data;
+  recordPayment: async (data: CreditTransactionRequest): Promise<CreditTransactionResponse> => {
+    const response = await axiosClient.post<ApiResponse<CreditTransactionResponse>>('/v1/credits/payments', data);
+    return response.data.data;
   },
 
-  create: async (data: CreditTransactionRequest): Promise<CreditTransactionResponse> => {
-    // TODO: Implement create credit transaction API call
-    const response = await axiosClient.post<CreditTransactionResponse>('/credits', data);
-    return response.data;
+  getCustomerHistory: async (customerId: number): Promise<CreditTransactionResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<CreditTransactionResponse[]>>(`/v1/credits/customers/${customerId}/history`);
+    return response.data.data;
   },
 
-  settle: async (id: number): Promise<CreditTransactionResponse> => {
-    // TODO: Implement settle credit API call
-    const response = await axiosClient.put<CreditTransactionResponse>(`/credits/${id}/settle`);
-    return response.data;
+  getPendingCustomers: async (): Promise<CustomerResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<CustomerResponse[]>>('/v1/credits/pending-customers');
+    return response.data.data;
+  },
+
+  getTotalOutstanding: async () => {
+    const response = await axiosClient.get<ApiResponse<any>>('/v1/credits/total-outstanding');
+    return response.data.data;
   },
 };

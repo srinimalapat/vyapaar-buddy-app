@@ -1,35 +1,30 @@
 import axiosClient from './axiosClient';
 import { SaleRequest, SaleResponse } from '../types/sale';
+import { ApiResponse } from '../types/common';
 
 export const saleApi = {
-  getAll: async (page = 0, size = 10): Promise<SaleResponse[]> => {
-    // TODO: Implement get all sales API call
-    const response = await axiosClient.get<SaleResponse[]>('/sales', {
-      params: { page, size },
-    });
-    return response.data;
+  getAll: async (params?: { fromDate?: string; toDate?: string; customerId?: number; saleType?: string }): Promise<SaleResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<SaleResponse[]>>('/v1/sales', { params });
+    return response.data.data;
   },
 
   getById: async (id: number): Promise<SaleResponse> => {
-    // TODO: Implement get sale by ID API call
-    const response = await axiosClient.get<SaleResponse>(`/sales/${id}`);
-    return response.data;
+    const response = await axiosClient.get<ApiResponse<SaleResponse>>(`/v1/sales/${id}`);
+    return response.data.data;
   },
 
   create: async (data: SaleRequest): Promise<SaleResponse> => {
-    // TODO: Implement create sale API call
-    const response = await axiosClient.post<SaleResponse>('/sales', data);
-    return response.data;
+    const response = await axiosClient.post<ApiResponse<SaleResponse>>('/v1/sales', data);
+    return response.data.data;
   },
 
-  update: async (id: number, data: SaleRequest): Promise<SaleResponse> => {
-    // TODO: Implement update sale API call
-    const response = await axiosClient.put<SaleResponse>(`/sales/${id}`, data);
-    return response.data;
+  getDailySummary: async (date: string) => {
+    const response = await axiosClient.get<ApiResponse<any>>('/v1/sales/summary/daily', { params: { date } });
+    return response.data.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    // TODO: Implement delete sale API call
-    await axiosClient.delete(`/sales/${id}`);
+  getMonthlySummary: async (year: number, month: number) => {
+    const response = await axiosClient.get<ApiResponse<any>>('/v1/sales/summary/monthly', { params: { year, month } });
+    return response.data.data;
   },
 };
