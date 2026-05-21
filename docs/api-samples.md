@@ -854,3 +854,128 @@ Content-Type: application/json
 | Record payment | `Payment Ramesh 300` or `Paid Suresh 500` |
 | Add/update stock | `Stock add sugar 10kg 45` |
 | Daily report | `Report today` or `Today report` |
+
+---
+
+## Photo Stock Entry (Phase 10)
+
+> Upload supplier bills, stock sheets, or handwritten lists to auto-extract inventory items.
+> Inventory is **only updated after owner confirmation** — never at upload time.
+
+### 1. Upload Image & Extract Items
+
+```http
+POST /api/v1/photo-stock/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+Form fields:
+  file     = stock-list.jpg        (required)
+  mockText = Rice 25kg 60          (optional — for local testing without real OCR)
+             Sugar 10kg 45
+             Oil 5L 140
+             Tea powder 12 pcs 90
+             Dal 20kg ₹120
+             Milk 10 packets 30
+```
+
+Response (201):
+```json
+{
+  "success": true,
+  "message": "Image uploaded and text extracted",
+  "data": {
+    "id": 1,
+    "sourceType": "LOCAL_UPLOAD",
+    "originalFileName": "stock-list.jpg",
+    "extractedText": "Rice 25kg 60\nSugar 10kg 45\nOil 5L 140",
+    "status": "PENDING_REVIEW",
+    "items": [
+      { "id": 1, "itemName": "Rice",  "quantity": 25, "unit": "kg", "unitPrice": 60,  "category": "General", "confidenceScore": 0.90, "validationErrors": null },
+      { "id": 2, "itemName": "Sugar", "quantity": 10, "unit": "kg", "unitPrice": 45,  "category": "General", "confidenceScore": 0.90, "validationErrors": null },
+      { "id": 3, "itemName": "Oil",   "quantity": 5,  "unit": "l",  "unitPrice": 140, "category": "General", "confidenceScore": 0.90, "validationErrors": null }
+    ]
+  }
+}
+```
+
+### 2. Get Entry by ID
+
+```http
+GET /api/v1/photo-stock/1
+Authorization: Bearer <token>
+```
+
+### 3. List Entries
+
+```http
+GET /api/v1/photo-stock
+GET /api/v1/photo-stock?status=PENDING_REVIEW
+Authorization: Bearer <token>
+```
+
+### 4. Confirm — Update Inventory
+
+Pass edited items to override extracted values.
+If `items` is omitted, original extracted items are used.
+
+```http
+POST /api/v1/photo-stock/1/confirm
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "updateExistingItems": true,
+  "items": [
+    {
+      "itemName": "Rice",
+      "quantity": 25,
+      "unit": "kg",
+      "unitPrice": 60,
+      "category": "Grocery",
+      "lowStockThreshold": 5
+    },
+    {
+      "itemName": "Sugar",
+      "quantity": 10,
+      "unit": "kg",
+      "unitPrice": 45,
+      "category": "Grocery"
+    }
+  ]
+}
+```
+
+Behavior on confirm:
+- If item exists (case-insensitive name match, ACTIVE status): add quantity, optionally update price.
+- If item does not exist: create new ACTIVE inventory item (category default "General", threshold default 5).
+
+### 5. Cancel Entry
+
+```http
+POST /api/v1/photo-stock/1/cancel
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "reason": "Duplicate upload" }
+```
+
+### Local Test Steps (Postman)
+
+1. `POST /api/auth/login` → get token
+2. `POST /api/v1/photo-stock/upload` (multipart) with file + mockText
+3. Note the entry `id` and review `items` in response
+4. Optionally edit items in request body
+5. `POST /api/v1/photo-stock/{id}/confirm`
+6. Check `GET /api/v1/inventory` to see updated stock
+
+### Supported Mock Text Formats
+
+| Format | Example |
+|--------|---------|
+| Name + qty + unit + price | `Rice 25kg 60` |
+| Name + qty + unit (space) + price | `Sugar 10 kg 45` |
+| Name + qty + litre unit | `Oil 5L 140` |
+| Name + qty + pcs | `Tea powder 12 pcs 90` |
+| Price with ₹ symbol | `Dal 20kg ₹120` |
+| Packets unit | `Milk 10 packets 30` |

@@ -46,13 +46,22 @@ public class WhatsAppWebhookController {
                     JsonNode value = change.path("value");
                     JsonNode messages = value.path("messages");
                     for (JsonNode msg : messages) {
-                        String from = msg.path("from").asText(null);
+                        String from    = msg.path("from").asText(null);
+                        String msgType = msg.path("type").asText("text");
+                        String waId    = msg.path("id").asText(null);
+
+                        if (from == null) continue;
+
+                        if ("image".equals(msgType)) {
+                            String mediaId = msg.path("image").path("id").asText(null);
+                            handleIncomingImageMessage(from, mediaId, msg);
+                            continue;
+                        }
+
                         String text = msg.path("text").path("body").asText(null);
-                        String waId = msg.path("id").asText(null);
+                        if (text == null) continue;
 
-                        if (from == null || text == null) continue;
-
-                        log.info("[WEBHOOK] Inbound message from={} waId={}", from, waId);
+                        log.info("[WEBHOOK] Inbound text from={} waId={}", from, waId);
 
                         WhatsAppMessageLog logEntry = WhatsAppMessageLog.builder()
                                 .mobileNumber(from)
@@ -82,5 +91,26 @@ public class WhatsAppWebhookController {
             log.warn("[WEBHOOK] Error processing payload: {}", e.getMessage());
         }
         return ResponseEntity.ok("EVENT_RECEIVED");
+    }
+
+    /**
+     * Placeholder for incoming WhatsApp image messages.
+     *
+     * Future implementation steps:
+     * 1. Map fromMobileNumber to a Business/User record (requires phone-to-business mapping table).
+     * 2. Call Meta media endpoint: GET https://graph.facebook.com/{api-version}/{mediaId}
+     *    with Authorization: Bearer {access-token} to get download URL.
+     * 3. Download the image bytes using the returned URL.
+     * 4. Pass downloaded file to PhotoStockEntryService.uploadAndExtract().
+     * 5. Send a confirmation WhatsApp message back to the shop owner with extracted items.
+     *
+     * Important: Do NOT update inventory automatically from WhatsApp image until
+     * business mapping is implemented and owner confirmation is received.
+     */
+    private void handleIncomingImageMessage(String fromMobileNumber, String mediaId, JsonNode messageNode) {
+        // Safe metadata only — never log media content or access tokens
+        log.info("[WEBHOOK] Inbound image from={} mediaId={} (processing not yet implemented)",
+                fromMobileNumber, mediaId);
+        // TODO: Implement when business-to-phone mapping is in place
     }
 }

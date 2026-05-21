@@ -12,6 +12,7 @@ import CreditsPage from '../pages/CreditsPage';
 import RemindersPage from '../pages/RemindersPage';
 import InventoryPage from '../pages/InventoryPage';
 import WhatsAppPage from '../pages/WhatsAppPage';
+import PhotoStockEntryPage from '../pages/PhotoStockEntryPage';
 import ReportsPage from '../pages/ReportsPage';
 
 const router = createBrowserRouter([
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: 'inventory',              element: <InventoryPage /> },
       { path: 'whatsapp',               element: <WhatsAppPage /> },
       { path: 'mock-whatsapp',          element: <WhatsAppPage /> },
+      { path: 'photo-stock',            element: <PhotoStockEntryPage /> },
       { path: 'reports',                element: <ReportsPage /> },
     ],
   },

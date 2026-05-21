@@ -44,6 +44,10 @@ springdoc:
     path: /swagger-ui.html
 
 app:
+  ocr:
+    provider: ${OCR_PROVIDER:MOCK}
+    upload-dir: ${OCR_UPLOAD_DIR:uploads/photo-stock}
+
   whatsapp:
     mode: ${WHATSAPP_MODE:MANUAL}
     cloud-api:
